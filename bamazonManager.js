@@ -51,13 +51,93 @@ var manager = {
   	);
   },
   viewLow: function() {
-
+    var query = connection.query(
+      "SELECT item_id,product_name,stock_quantity FROM products HAVING stock_quantity<10",
+      function(err,res) {
+        if(err) throw err;
+        var t = new Table;
+        res.forEach(function(product) {
+          t.cell('Item Id', product.item_id);
+          t.cell('Name', product.product_name);
+          t.cell('Stock Quantity', product.stock_quantity);
+          t.newRow();
+        })
+        console.log(t.toString());
+        manager.menuOptions();
+      }
+    );
   },
   restock: function() {
-
+    inquirer.prompt([
+    {
+      name:'id',
+      message:'What is the id of the product you would like to restock? ',
+      validate:function(value){
+        if(isNaN(value)===false)
+          return true;
+        return false;
+      }
+    },
+    {
+      name:'amt',
+      message:'How much would you like to add to the inventory? ',
+      validate:function(value){
+        if(isNaN(value)===false)
+          return true;
+        return false;
+      }
+    }
+    ]).then(function(data){
+      var query = connection.query(
+        "UPDATE products SET stock_quantity = stock_quantity + ? WHERE item_id = ?",
+        [data.amt,data.id],
+        function(err,res){
+          if(err) throw err;
+          console.log(data.amt + ' units added to item ' + data.id);
+          manager.menuOptions();
+        }
+      )
+    });
   },
   addNewItem: function() {
-
+    inquirer.prompt([
+    {
+      name:'dept',
+      message:'Which department will this item be placed in?'
+    },
+    {
+      name:'name',
+      message:'What is the name of the item?'
+    },
+    {
+      name:'price',
+      message:'What is the price point? ',
+      validate:function(value){
+        if(isNaN(value)===false)
+          return true;
+        return false;
+      }
+    },
+    {
+      name:'amt',
+      message:'How much would you like to add to the inventory? ',
+      validate:function(value){
+        if(isNaN(value)===false)
+          return true;
+        return false;
+      }
+    }
+    ]).then(function(data){
+      var query = connection.query(
+        "INSERT INTO products(department_name,product_name,price,stock_quantity) VALUES (?,?,?,?)",
+        [data.dept,data.name,data.price,data.amt],
+        function(err,res){
+          if(err) throw err;
+          console.log(data.amt + ' units of ' + data.name + ' added to the ' + data.dept + ' department with a price of ' + '$' + data.price + '.');
+          manager.menuOptions();
+        }
+      )
+    });
   },
   quit: function() {
     connection.end();

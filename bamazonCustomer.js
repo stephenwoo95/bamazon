@@ -77,6 +77,16 @@ var customer = {
         if(err) throw err;
         var total = parseInt(res[0].price)*parseInt(amt);
         console.log('Checkout Total: $' + total);
+        customer.productSales(id,total);
+      }
+    );
+  },
+  productSales: function(id,amt) {
+    var query = connection.query(
+      "UPDATE products SET product_sales = product_sales + ? WHERE item_id=?",
+      [amt,id],
+      function(err,res){
+        if(err) throw err;
         connection.end();
       }
     );
