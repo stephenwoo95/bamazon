@@ -16,3 +16,8 @@ CREATE TABLE departments(
     department_name VARCHAR(100),
     overhead_costs FLOAT(10,2)
 );
+
+CREATE TABLE users(
+	name VARCHAR(50) PRIMARY KEY,
+    password VARCHAR(100)
+);

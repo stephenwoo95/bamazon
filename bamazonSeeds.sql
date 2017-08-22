@@ -19,3 +19,8 @@ FROM products INNER JOIN departments
 ON products.department_name=departments.department_name
 GROUP BY departments.department_id;
 
+INSERT INTO users(name,password)
+VALUES('Manager','1a8565a9dc72048ba03b4156be3e569f22771f23'),('Supervisor','0f4d09e43d208d5e9222322fbc7091ceea1a78c3');
+
+SELECT * FROM users;
+
