@@ -54,8 +54,10 @@ var customer = {
           var updatedStock = parseInt(res[0].stock_quantity) - parseInt(amt);
           customer.updateStock(id,updatedStock,amt);
         }
-        else
+        else{
           console.log('Insufficient quantity!');
+          customer.askCustomer();
+        }
       }
     );
   },

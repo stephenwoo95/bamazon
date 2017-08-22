@@ -9,7 +9,7 @@ var supervisor = {
         type:'list',
         name:'menuOption',
         message:'Select an action',
-        choices:['View Product Sales by Department','Create New Department','Quit'],
+        choices:['View Product Sales by Department','Create New Department','Sort Items','Quit'],
         default:'View Product Sales by Department'
       }
     ]).then(function(data){
@@ -19,6 +19,9 @@ var supervisor = {
           break;
         case 'Create New Department':
           supervisor.createNewDept();
+          break;
+        case 'Sort Items':
+          supervisor.sortItems();
           break;
         case 'Quit':
           supervisor.quit();
@@ -74,6 +77,51 @@ var supervisor = {
       function(err,res){
         if(err) throw err;
         supervisor.menuOptions();
+      }
+    );
+  },
+  sortItems: function() {
+    var query = connection.query(
+      "SELECT item_id FROM products WHERE department_name='To Be Sorted'",
+      function(err,res){
+        if(err) throw err;
+        if(res.length !=0)
+          supervisor.setDept(res[0].item_id);
+        else{
+          console.log('All Items Sorted');
+          supervisor.menuOptions();
+        }
+      }
+    );
+  },
+  setDept: function(id) {
+    var query = connection.query(
+      "SELECT product_name FROM products WHERE item_id=?",
+      [id],
+      function(err,res){
+        if(err) throw err;
+        var message = "What would you like to set the department of "+res[0].product_name+" to?";
+        inquirer.prompt([
+          {
+            name:'dept',
+            message:message,
+            validate:function(value){
+              return !(value==='');
+            }
+          }
+        ]).then(function(data){
+          supervisor.updateDept(data,id);
+        });
+      }
+    )
+  },
+  updateDept: function(data,id) {
+    var query = connection.query(
+      "UPDATE products SET department_name=? WHERE item_id=?",
+      [data.dept,id],
+      function(err,res){
+        if(err) throw err;
+        supervisor.sortItems();
       }
     );
   },
