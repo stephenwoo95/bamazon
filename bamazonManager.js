@@ -24,7 +24,7 @@ var manager = {
           manager.restock();
           break;
         case 'Add New Product':
-          manager.addNewItem();
+          manager.grabDepts();
           break;
         case 'Quit':
           manager.quit();
@@ -62,7 +62,11 @@ var manager = {
           t.cell('Stock Quantity', product.stock_quantity);
           t.newRow();
         })
-        console.log(t.toString());
+        var table = t.toString();
+        if(t !== '')
+          console.log(table);
+        else
+          console.log('No Low Inventory!');
         manager.menuOptions();
       }
     );
@@ -88,22 +92,41 @@ var manager = {
       }
     }
     ]).then(function(data){
-      var query = connection.query(
-        "UPDATE products SET stock_quantity = stock_quantity + ? WHERE item_id = ?",
-        [data.amt,data.id],
-        function(err,res){
-          if(err) throw err;
-          console.log(data.amt + ' units added to item ' + data.id);
-          manager.menuOptions();
-        }
-      )
+      manager.restockHelper(data.id,data.amt);
     });
   },
-  addNewItem: function() {
+  restockHelper: function(id,amt) {
+    var query = connection.query(
+      "UPDATE products SET stock_quantity = stock_quantity + ? WHERE item_id = ?",
+      [amt,id],
+      function(err,res){
+        if(err) throw err;
+        console.log(amt + ' units added to item ' + id);
+        manager.menuOptions();
+      }
+    );
+  },
+  grabDepts: function() {
+    var query = connection.query(
+      "SELECT department_name FROM departments",
+      function(err,res){
+        if(err) throw err;
+        var depts = [];
+        for(i=0;i<res.length;i++){
+          depts.push(res[i].department_name);
+        }
+        manager.addNewItem(depts);
+      }
+    );
+  },
+  addNewItem: function(depts) {
+    depts.push('To Be Sorted');
     inquirer.prompt([
     {
+      type:'list',
       name:'dept',
-      message:'Which department will this item be placed in?'
+      message:'Which department will this item be placed in?',
+      choices: depts
     },
     {
       name:'name',
@@ -128,16 +151,19 @@ var manager = {
       }
     }
     ]).then(function(data){
-      var query = connection.query(
-        "INSERT INTO products(department_name,product_name,price,stock_quantity) VALUES (?,?,?,?)",
-        [data.dept,data.name,data.price,data.amt],
-        function(err,res){
-          if(err) throw err;
-          console.log(data.amt + ' units of ' + data.name + ' added to the ' + data.dept + ' department with a price of ' + '$' + data.price + '.');
-          manager.menuOptions();
-        }
-      )
+      manager.addNewHelper(data);
     });
+  },
+  addNewHelper: function(data){
+    var query = connection.query(
+      "INSERT INTO products(department_name,product_name,price,stock_quantity) VALUES (?,?,?,?)",
+      [data.dept,data.name,data.price,data.amt],
+      function(err,res){
+        if(err) throw err;
+        console.log(data.amt + ' units of ' + data.name + ' added to the ' + data.dept + ' department with a price of ' + '$' + data.price + '.');
+        manager.menuOptions();
+      }
+    )
   },
   quit: function() {
     connection.end();
